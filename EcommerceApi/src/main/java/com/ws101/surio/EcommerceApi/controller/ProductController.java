@@ -37,12 +37,69 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+        
+        // 1. Product name validation (required, minimum length 3)
+        if (product.getName() == null || product.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Product name is required");
+        }
+        if (product.getName().length() < 3) {
+            throw new IllegalArgumentException("Product name must be at least 3 characters long");
+        }
+        if (product.getName().length() > 100) {
+            throw new IllegalArgumentException("Product name cannot exceed 100 characters");
+        }
+
+        // 2. Price validation (must be positive number)
+        if (product.getPrice() == null) {
+            throw new IllegalArgumentException("Product price is required");
+        }
+        if (product.getPrice() <= 0) {
+            throw new IllegalArgumentException("Product price must be positive");
+        }
+        if (product.getPrice() > 1000000) {
+            throw new IllegalArgumentException("Product price cannot exceed 1,000,000");
+        }
+
+        // 3. Category validation (required)
+        if (product.getCategory() == null || product.getCategory().trim().isEmpty()) {
+            throw new IllegalArgumentException("Product category is required");
+        }
+
+        // 4. Stock quantity validation (must be non-negative)
+        if (product.getStockQuantity() == null) {
+            product.setStockQuantity(0); // Default to 0 if not provided
+        }
+        if (product.getStockQuantity() < 0) {
+            throw new IllegalArgumentException("Stock quantity cannot be negative");
+        }
+        if (product.getStockQuantity() > 10000) {
+            throw new IllegalArgumentException("Stock quantity cannot exceed 10,000");
+        }
+
         Product createdProduct = productService.createProduct(product);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        
+        // Validation for update
+        if (product.getName() == null || product.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Product name is required");
+        }
+        if (product.getName().length() < 3) {
+            throw new IllegalArgumentException("Product name must be at least 3 characters long");
+        }
+        if (product.getPrice() == null || product.getPrice() <= 0) {
+            throw new IllegalArgumentException("Product price must be positive");
+        }
+        if (product.getCategory() == null || product.getCategory().trim().isEmpty()) {
+            throw new IllegalArgumentException("Product category is required");
+        }
+        if (product.getStockQuantity() != null && product.getStockQuantity() < 0) {
+            throw new IllegalArgumentException("Stock quantity cannot be negative");
+        }
+
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 
@@ -53,19 +110,49 @@ public class ProductController {
         updates.forEach((key, value) -> {
             switch (key) {
                 case "name":
-                    existing.setName((String) value);
+                    String name = (String) value;
+                    if (name == null || name.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Product name cannot be empty");
+                    }
+                    if (name.length() < 3) {
+                        throw new IllegalArgumentException("Product name must be at least 3 characters long");
+                    }
+                    if (name.length() > 100) {
+                        throw new IllegalArgumentException("Product name cannot exceed 100 characters");
+                    }
+                    existing.setName(name);
                     break;
                 case "description":
                     existing.setDescription((String) value);
                     break;
                 case "price":
-                    existing.setPrice(((Number) value).doubleValue());
+                    Number priceNum = (Number) value;
+                    double price = priceNum.doubleValue();
+                    if (price <= 0) {
+                        throw new IllegalArgumentException("Product price must be positive");
+                    }
+                    if (price > 1000000) {
+                        throw new IllegalArgumentException("Product price cannot exceed 1,000,000");
+                    }
+                    existing.setPrice(price);
                     break;
                 case "category":
-                    existing.setCategory((String) value);
+                    String category = (String) value;
+                    if (category == null || category.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Product category cannot be empty");
+                    }
+                    existing.setCategory(category);
                     break;
                 case "stockQuantity":
-                    existing.setStockQuantity(((Number) value).intValue());
+                    Number stockNum = (Number) value;
+                    int stock = stockNum.intValue();
+                    if (stock < 0) {
+                        throw new IllegalArgumentException("Stock quantity cannot be negative");
+                    }
+                    if (stock > 10000) {
+                        throw new IllegalArgumentException("Stock quantity cannot exceed 10,000");
+                    }
+                    existing.setStockQuantity(stock);
                     break;
                 case "imageUrl":
                     existing.setImageUrl((String) value);

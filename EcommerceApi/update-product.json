@@ -1,0 +1,9 @@
+{
+    "id": 1,
+    "name": "Gaming Laptop Ultra",
+    "description": "RTX 4090, 32GB RAM, 1TB SSD",
+    "price": 2499.99,
+    "category": "Electronics",
+    "stockQuantity": 5,
+    "imageUrl": "laptop-ultra.jpg"
+}

@@ -8,26 +8,66 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST Controller for product-related API endpoints.
+ * 
+ * Exposes CRUD operations and filtering capabilities for the product catalog.
+ * This controller acts as the bridge between the frontend and the service layer.
+ * 
+ * @author Mary Ann Surio
+ * @see ProductService
+ * @see Product
+ */
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * Constructor for dependency injection.
+     * 
+     * @param productService the service layer for product operations
+     */
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
 
+    /**
+     * Retrieves all products from the catalog.
+     * 
+     * @return ResponseEntity containing list of all products with HTTP 200 OK status
+     */
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
+    /**
+     * Retrieves a single product by its unique identifier.
+     * 
+     * @param id the unique identifier of the product (must be a positive number)
+     * @return ResponseEntity containing the product with HTTP 200 OK status
+     * @throws com.ws101.surio.EcommerceApi.exception.ProductNotFoundException if product with given ID does not exist
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
+    /**
+     * Filters products by category, price, or name.
+     * 
+     * Supported filter types:
+     * - category: Filters by exact category match (case-insensitive)
+     * - price: Filters products with price less than or equal to the given value
+     * - name: Filters products with name containing the given text (case-insensitive)
+     * 
+     * @param filterType the type of filter ("category", "price", or "name")
+     * @param filterValue the value to filter by
+     * @return ResponseEntity containing filtered list of products with HTTP 200 OK status
+     * @throws IllegalArgumentException if filter type is invalid or price value is not a number
+     */
     @GetMapping("/filter")
     public ResponseEntity<List<Product>> filterProducts(
             @RequestParam String filterType,
@@ -35,6 +75,19 @@ public class ProductController {
         return ResponseEntity.ok(productService.filterProducts(filterType, filterValue));
     }
 
+    /**
+     * Creates a new product with auto-generated ID.
+     * 
+     * Validates the input before creating the product:
+     * - Name is required and must be at least 3 characters
+     * - Price is required and must be positive
+     * - Category is required
+     * - Stock quantity defaults to 0 if not provided, must be non-negative
+     * 
+     * @param product the product to create (ID is auto-generated, do not provide)
+     * @return ResponseEntity containing the created product with HTTP 201 Created status
+     * @throws IllegalArgumentException if validation fails (missing name, invalid price, etc.)
+     */
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
         
@@ -67,7 +120,7 @@ public class ProductController {
 
         // 4. Stock quantity validation (must be non-negative)
         if (product.getStockQuantity() == null) {
-            product.setStockQuantity(0); // Default to 0 if not provided
+            product.setStockQuantity(0);
         }
         if (product.getStockQuantity() < 0) {
             throw new IllegalArgumentException("Stock quantity cannot be negative");
@@ -80,10 +133,20 @@ public class ProductController {
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
+    /**
+     * Replaces an entire product with new data (full update).
+     * 
+     * All fields must be provided as this is a full replacement operation.
+     * 
+     * @param id the unique identifier of the product to update
+     * @param product the complete product data to replace with
+     * @return ResponseEntity containing the updated product with HTTP 200 OK status
+     * @throws com.ws101.surio.EcommerceApi.exception.ProductNotFoundException if product with given ID does not exist
+     * @throws IllegalArgumentException if validation fails
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         
-        // Validation for update
         if (product.getName() == null || product.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Product name is required");
         }
@@ -103,6 +166,18 @@ public class ProductController {
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 
+    /**
+     * Partially updates a product (only specified fields).
+     * 
+     * Only the fields provided in the request body will be updated.
+     * Other fields remain unchanged.
+     * 
+     * @param id the unique identifier of the product to update
+     * @param updates a map containing only the fields to update and their new values
+     * @return ResponseEntity containing the updated product with HTTP 200 OK status
+     * @throws com.ws101.surio.EcommerceApi.exception.ProductNotFoundException if product with given ID does not exist
+     * @throws IllegalArgumentException if validation fails for any updated field
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<Product> patchProduct(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         Product existing = productService.getProductById(id);
@@ -165,6 +240,13 @@ public class ProductController {
         return ResponseEntity.ok(existing);
     }
 
+    /**
+     * Deletes a product from the catalog by its ID.
+     * 
+     * @param id the unique identifier of the product to delete
+     * @return ResponseEntity with HTTP 204 No Content status (no response body)
+     * @throws com.ws101.surio.EcommerceApi.exception.ProductNotFoundException if product with given ID does not exist
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);

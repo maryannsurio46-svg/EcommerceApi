@@ -1,8 +1,1 @@
-{
-    "name": "Smart Watch Pro",
-    "description": "Fitness tracker with GPS",
-    "price": 249.99,
-    "category": "Electronics",
-    "stockQuantity": 20,
-    "imageUrl": "smartwatch.jpg"
-}
+{"name":"Test Product","price":99.99,"category":"Electronics","stockQuantity":20} 

@@ -1,111 +1,35 @@
 package com.ws101.surio.EcommerceApi.service;
 
 import com.ws101.surio.EcommerceApi.model.Product;
+import com.ws101.surio.EcommerceApi.repository.ProductRepository;
 import com.ws101.surio.EcommerceApi.exception.ProductNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * Service class for product-related operations.
- * 
- * Provides business logic for CRUD operations, filtering, and managing products.
- * This class acts as an intermediary between the API controller and the
- * in-memory data storage layer. All product data is stored in RAM using an ArrayList.
- * 
- * @author Mary Ann Surio
- * @see Product
- */
 @Service
 public class ProductService {
 
-    /** In-memory storage for products using ArrayList. */
-    private final List<Product> productList = new ArrayList<>();
-    
-    /** Counter for generating unique product IDs. Starts at 1 and increments with each new product. */
-    private Long nextId = 1L;
+    @Autowired
+    private ProductRepository productRepository;
 
-    /**
-     * Constructor initializes the service with at least 10 sample products.
-     * 
-     * Creates and stores sample products for testing API endpoints.
-     * This demonstrates the in-memory storage approach and provides immediate
-     * data for development without requiring a database connection.
-     */
-    public ProductService() {
-        productList.add(new Product(nextId++, "Gaming Laptop", "High-performance laptop with RTX 4060", 1299.99, "Electronics", 10, "laptop.jpg"));
-        productList.add(new Product(nextId++, "Wireless Mouse", "Ergonomic wireless mouse with RGB", 29.99, "Accessories", 50, "mouse.jpg"));
-        productList.add(new Product(nextId++, "Mechanical Keyboard", "RGB mechanical gaming keyboard", 89.99, "Accessories", 30, "keyboard.jpg"));
-        productList.add(new Product(nextId++, "4K Monitor", "27-inch 4K UHD monitor", 399.99, "Electronics", 15, "monitor.jpg"));
-        productList.add(new Product(nextId++, "Cotton T-Shirt", "100% cotton crew neck t-shirt", 19.99, "Clothing", 100, "tshirt.jpg"));
-        productList.add(new Product(nextId++, "Slim Fit Jeans", "Blue slim fit jeans", 49.99, "Clothing", 40, "jeans.jpg"));
-        productList.add(new Product(nextId++, "Programming Book", "Java Programming: A Comprehensive Guide", 39.99, "Books", 25, "book.jpg"));
-        productList.add(new Product(nextId++, "Noise-Cancelling Headphones", "Wireless over-ear headphones", 199.99, "Electronics", 20, "headphones.jpg"));
-        productList.add(new Product(nextId++, "Ceramic Coffee Mug", "15oz ceramic coffee mug", 12.99, "Kitchen", 60, "mug.jpg"));
-        productList.add(new Product(nextId++, "Laptop Backpack", "Water-resistant laptop backpack", 59.99, "Accessories", 35, "backpack.jpg"));
-    }
-
-    /**
-     * Retrieves all products from the in-memory storage.
-     * 
-     * Returns a defensive copy of the product list to prevent external modification
-     * of the internal data store.
-     * 
-     * @return a new {@code ArrayList<Product>} containing all products.
-     *         Returns an empty list if no products are available.
-     */
+    // Retrieve all products from database
     public List<Product> getAllProducts() {
-        return new ArrayList<>(productList);
+        return productRepository.findAll();
     }
 
-    /**
-     * Finds and retrieves a product by its unique identifier.
-     * 
-     * Searches the in-memory product list for a product with the matching ID.
-     * 
-     * @param id the unique identifier of the product to retrieve.
-     *           Must be a positive non-null Long value.
-     * @return the {@code Product} with the matching ID.
-     * @throws ProductNotFoundException if no product exists with the given ID.
-     *         The exception message includes the ID that was not found.
-     */
+    // Find product by ID from database
     public Product getProductById(Long id) {
-        return productList.stream()
-                .filter(product -> product.getId().equals(id))
-                .findFirst()
+        return productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
     }
 
-    /**
-     * Creates and adds a new product to the in-memory storage.
-     * 
-     * Automatically generates a unique ID for the product using a counter strategy.
-     * The ID is assigned before adding to the list.
-     * 
-     * @param product the product to create. The ID field can be null as it will be
-     *                auto-generated. All other fields should be provided.
-     * @return the created {@code Product} with the auto-generated ID assigned.
-     */
+    // Create a new product in database
     public Product createProduct(Product product) {
-        product.setId(nextId++);
-        productList.add(product);
-        return product;
+        return productRepository.save(product);
     }
 
-    /**
-     * Updates an existing product completely (full replacement).
-     * 
-     * Finds the product by ID and replaces all its fields with the values from
-     * the provided updated product.
-     * 
-     * @param id the unique identifier of the product to update.
-     *           Must be a positive non-null Long value.
-     * @param updatedProduct the product containing the new data. All fields
-     *                       should be provided as this is a full replacement.
-     * @return the updated {@code Product} with the new values.
-     * @throws ProductNotFoundException if no product exists with the given ID.
-     */
+    // Update an existing product in database
     public Product updateProduct(Long id, Product updatedProduct) {
         Product existing = getProductById(id);
         existing.setName(updatedProduct.getName());
@@ -114,60 +38,29 @@ public class ProductService {
         existing.setCategory(updatedProduct.getCategory());
         existing.setStockQuantity(updatedProduct.getStockQuantity());
         existing.setImageUrl(updatedProduct.getImageUrl());
-        return existing;
+        return productRepository.save(existing);
     }
 
-    /**
-     * Deletes a product from the in-memory storage by its ID.
-     * 
-     * Finds the product by ID and removes it from the product list.
-     * After deletion, the ID is not reused for future products.
-     * 
-     * @param id the unique identifier of the product to delete.
-     *           Must be a positive non-null Long value.
-     * @throws ProductNotFoundException if no product exists with the given ID.
-     */
+    // Delete a product from database
     public void deleteProduct(Long id) {
         Product product = getProductById(id);
-        productList.remove(product);
+        productRepository.delete(product);
     }
 
-    /**
-     * Filters products based on specified criteria.
-     * 
-     * Retrieves all products that match the given filter type and value.
-     * Supported filter types: category (exact match), price (maximum value),
-     * and name (partial match, case-insensitive).
-     * 
-     * @param filterType the type of filter to apply. Must be one of:
-     *                   "category", "price", or "name".
-     * @param filterValue the value to filter by. For "category", a string category name.
-     *                    For "price", a numeric value (will be parsed to double).
-     *                    For "name", a string to search for in product names.
-     * @return a {@code List<Product>} containing all products matching the filter criteria.
-     *         Returns an empty list if no products match the criteria.
-     * @throws IllegalArgumentException if filterType is not one of the supported values,
-     *                                  or if filterValue for "price" cannot be parsed to a number.
-     */
+    // Filter products by category, price, or name
     public List<Product> filterProducts(String filterType, String filterValue) {
         switch (filterType.toLowerCase()) {
             case "category":
-                return productList.stream()
-                        .filter(p -> p.getCategory().equalsIgnoreCase(filterValue))
-                        .collect(Collectors.toList());
+                return productRepository.findByCategoryIgnoreCase(filterValue);
             case "price":
                 try {
                     double maxPrice = Double.parseDouble(filterValue);
-                    return productList.stream()
-                            .filter(p -> p.getPrice() <= maxPrice)
-                            .collect(Collectors.toList());
+                    return productRepository.findByPriceBetween(0.0, maxPrice);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException("Invalid price value: " + filterValue);
                 }
             case "name":
-                return productList.stream()
-                        .filter(p -> p.getName().toLowerCase().contains(filterValue.toLowerCase()))
-                        .collect(Collectors.toList());
+                return productRepository.findByNameContainingIgnoreCase(filterValue);
             default:
                 throw new IllegalArgumentException("Invalid filter type: " + filterType + ". Use 'category', 'price', or 'name'.");
         }

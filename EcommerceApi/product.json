@@ -1,1 +1,7 @@
-{"name":"Test Product","price":99.99,"category":"Electronics","stockQuantity":20} 
+[
+    {"name":"Test Product","price":99.99,"category":"Electronics","stockQuantity":20},
+    {"name":"Wireless Headphones","price":150.50,"category":"Electronics","stockQuantity":15},
+    {"name":"Organic Face Cream","price":24.99,"category":"Beauty","stockQuantity":50},
+    {"name":"Building Blocks Set","price":35.75,"category":"Toys","stockQuantity":30},
+    {"name":"Stainless Steel Mug","price":12.50,"category":"Kitchen","stockQuantity":100}
+]

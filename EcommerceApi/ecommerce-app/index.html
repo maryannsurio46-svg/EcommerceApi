@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Electronics Store API</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { margin: 10px; padding: 10px; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Electronics Store API Test</h1>
+    
+    <button onclick="testGetProducts()">Get All Products</button>
+    <button onclick="testGetCategories()">Get Categories</button>
+    <button onclick="testCreateProduct()">Create Test Product</button>
+    
+    <h3>Response:</h3>
+    <pre id="result">Click a button to test API...</pre>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/v1/products';
+
+        
+        async function testGetProducts() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Loading products...';
+            
+            try {
+                const response = await fetch(API_BASE);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✅ Success!</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>\n\nMake sure:\n1. Backend is running on port 8080\n2. CORS is configured\n3. Check console for details`;
+                console.error('Error:', error);
+            }
+        }
+        
+        async function testGetCategories() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Loading categories...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/v1/categories');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✅ Success!</span>\n${JSON.stringify(data, null, 2)}`;
+            } 
+            
+            catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+                console.error('Error:', error);
+            }
+        }
+        
+        async function testCreateProduct() {
+    const resultDiv = document.getElementById('result');
+    const newProduct = {
+        name: "Test Product",
+        description: "This is a test product",
+        price: 99.99,
+        stockQuantity: 10,
+        categoryId: 1
+    };
+    
+    resultDiv.textContent = 'Creating product...';
+    
+    try {
+        const response = await fetch(API_BASE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newProduct)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        resultDiv.innerHTML = `<span class="success">✅ Product created!</span>\n${JSON.stringify(data, null, 2)}`;
+    } catch (error) {
+        resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+        console.error('Error:', error);
+    }
+}
+
+    </script>
+</body>
+</html>

@@ -1,30 +1,20 @@
-// Utility function to fetch products from API
 async function fetchProducts() {
   try {
-    const response = await fetch('http://localhost:8080/api/products');
+    const response = await fetch('http://localhost:8080/api/v1/products');
 
-    // Check if response is successful
     if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Products not found (Error 404)');
-      } else if (response.status === 500) {
-        throw new Error('Server error (Error 500)');
-      } else {
-        throw new Error(`Unexpected error: ${response.status}`);
-      }
+      throw new Error(`Error: ${response.status}`);
     }
 
     const data = await response.json();
     return data;
 
   } catch (error) {
-    // Log specific error for debugging
-    console.error('[fetchProducts Error]', error.message);
-    throw error; // Re-throw to handle in render function
+    console.error('Fetch error:', error.message);
+    throw error;
   }
 }
 
-// Render products to the page
 async function renderProducts() {
   const main = document.querySelector('main');
   
@@ -32,19 +22,18 @@ async function renderProducts() {
     const products = await fetchProducts();
 
     if (products.length === 0) {
-      // Empty state
-      main.innerHTML = <p class="empty-state">No products available at the moment.</p>;
+      main.innerHTML = <p>No products found.</p>;
       return;
     }
 
-    // Generate product grid HTML
     const productGrid = `
       <div class="product-grid">
-        ${products.map(product => `
+        ${products.map(product =>`
           <div class="product-card">
-            <img src="${product.image}" alt="${product.name}">
+            <img src="${product.imageUrl}" alt="${product.name}">
             <h3>${product.name}</h3>
-            <p>$${product.price.toFixed(2)}</p>
+            <p>Price: $${product.price.toFixed(2)}</p>
+            <p>Stock: ${product.stockQuantity}</p>
           </div>
         `).join('')}
       </div>
@@ -53,9 +42,8 @@ async function renderProducts() {
     main.innerHTML = productGrid;
 
   } catch (error) {
-    main.innerHTML = <p class="error-message">Failed to load products. Please try again later.</p>;
+    main.innerHTML = <p>Failed to load products. Check console.</p>;
   }
 }
 
-// Call on page load
 document.addEventListener('DOMContentLoaded', renderProducts);

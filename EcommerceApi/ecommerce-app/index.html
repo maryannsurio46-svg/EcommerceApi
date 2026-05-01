@@ -15,7 +15,7 @@
     
     <button onclick="testGetProducts()">Get All Products</button>
     <button onclick="testGetCategories()">Get Categories</button>
-    <button onclick="testCreateProduct()">Create Test Product</button>
+    <button onclick="testCreateProduct()">Add Product</button>
     
     <h3>Response:</h3>
     <pre id="result">Click a button to test API...</pre>
@@ -44,26 +44,26 @@
             resultDiv.textContent = 'Loading categories...';
             
             try {
-                const response = await fetch('http://localhost:8080/api/v1/categories');
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                resultDiv.innerHTML = `<span class="success">✅ Success!</span>\n${JSON.stringify(data, null, 2)}`;
+                const response = await fetch('http://localhost:8080/api/v1/categories'); //Try to connect to the API and get data
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);//Convert response to JSON
+                const data = await response.json();//If server returns an error (like 404 or 500, throw error)
+                resultDiv.innerHTML = `<span class="success">✅ Success!</span>\n${JSON.stringify(data, null, 2)}`;//Display success message and data
             } 
             
             catch (error) {
-                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
-                console.error('Error:', error);
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;//If any error happens above, show error message to user
+                console.error('Error:', error);//Print detailed error in console for debugging
             }
         }
         
         async function testCreateProduct() {
     const resultDiv = document.getElementById('result');
     const newProduct = {
-        name: "Test Product",
+        name: "Charger",
         description: "This is a test product",
         price: 99.99,
         stockQuantity: 10,
-        categoryId: 1
+        category:'Electronics'
     };
     
     resultDiv.textContent = 'Creating product...';

@@ -5,35 +5,49 @@ import com.ws101.surio.EcommerceApi.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections; // For creating a simple roles list
+import java.util.Collections;
+import java.util.Locale; // For converting role to uppercase
+import java.util.Optional;
 
 @Service
-public class UserService {
+public class UsersService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // Inject the PasswordEncoder
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UsersService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerNewUser(String username, String rawPassword) {
-        // 1. Hash the raw password before saving
+    // Modified to accept String role
+    public User registerNewUser(String username, String rawPassword, String role) {
+        // Business validation: Check if username already exists
+        Optional<User> existingUser = userRepository.findByUsername(username);
+        if (existingUser.isPresent()) {
+            throw new IllegalStateException("Username '" + username + "' already exists.");
+        }
+
+        // Hash the raw password
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
-        // 2. Create the new User object
+        // Convert the input role to Spring Security's expected format (e.g., "ROLE_USER")
+        // and make sure it's uppercase for consistency with @Pattern validation
+        String formattedRole = "ROLE_" + role.toUpperCase(Locale.ROOT);
+
+
+        // Create the new User object
         User newUser = new User();
         newUser.setUsername(username);
         newUser.setPassword(encodedPassword);
-        // Assign default roles, e.g., "ROLE_USER"
-        newUser.setRoles(Collections.singletonList("ROLE_USER"));
+        // Assign the formatted role
+        newUser.setRoles(Collections.singletonList(formattedRole));
         newUser.setEnabled(true);
         newUser.setAccountNonExpired(true);
         newUser.setAccountNonLocked(true);
         newUser.setCredentialsNonExpired(true);
 
-        // 3. Save the user to the database
+        // Save the user to the database
         return userRepository.save(newUser);
     }
 

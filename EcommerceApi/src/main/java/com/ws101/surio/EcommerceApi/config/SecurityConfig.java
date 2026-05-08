@@ -2,69 +2,75 @@ package com.ws101.surio.EcommerceApi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod; // Import HttpMethod
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static org.springframework.security.config.Customizer.withDefaults; // For simpler default configurations
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
-@EnableWebSecurity // Enables Spring Security's web security support
+@EnableWebSecurity
+@EnableMethodSecurity // Keep this enabled for method-level security
 public class SecurityConfig {
 
-    // 1. PasswordEncoder Bean (as previously defined)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // 2. Configure the SecurityFilterChain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 // Public Endpoints (Permit All)
-                // GET requests for products
-                .requestMatchers("/api/v1/products").permitAll()
-                // POST request for user registration
-                .requestMatchers("/api/v1/auth/register").permitAll()
-                // Other public endpoints you might have (e.g., login, static resources)
-                .requestMatchers("/login**", "/css/**", "/js/**", "/images/**").permitAll() // Default login page, static resources
+                .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll() // Specific to GET for products
+                .requestMatchers("/api/v1/auth/register").permitAll() // POST register
+                .requestMatchers("/login**", "/css/**", "/js/**", "/images/**").permitAll() // Login page, static resources
 
-                // Protected Endpoints (Require Authentication)
-                // POST requests for orders
-                .requestMatchers("/api/v1/orders").authenticated() // or .hasRole("USER") / .hasAuthority("ROLE_USER") if you have roles
-                // DELETE requests for products (often restricted to ADMIN)
-                .requestMatchers("/api/v1/products/**").authenticated() // .hasRole("ADMIN") or .hasAuthority("ROLE_ADMIN") would be more secure here
-                // Any other request not explicitly permitted above will require authentication
+                // Require Auth: User-specific endpoints (e.g., POST /api/v1/orders)
+                // Any POST or GET to /api/v1/orders needs authentication
+                .requestMatchers("/api/v1/orders").authenticated()
+                // You can also specify method:
+                // .requestMatchers(HttpMethod.POST, "/api/v1/orders").authenticated()
+                // .requestMatchers(HttpMethod.GET, "/api/v1/orders").authenticated()
+
+
+                // Admin-only endpoints (DELETE /api/v1/products)
+                // This explicitly says only ADMIN can DELETE products
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
+                // Example for a specific path for admin
+                // .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+
+                // Default rule: Any other request needs authentication unless explicitly permitted above
+                // This catches anything not explicitly allowed or restricted by role above.
                 .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin
-                .loginPage("/login") // Custom login page if you have one, otherwise Spring will generate one
-                .loginProcessingUrl("/login") // Default URL to process the login form
-                .defaultSuccessUrl("/", true) // Redirect to home page after successful login
-                .failureUrl("/login?error=true") // Redirect to login page with error on failure
-                .permitAll() // Allow everyone to access form login related endpoints
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
             )
             .logout(logout -> logout
-                .logoutUrl("/logout") // Default URL for logout
-                .logoutSuccessUrl("/login?logout=true") // Redirect to login page after successful logout
-                .invalidateHttpSession(true) // Invalidate HTTP session on logout
-                .deleteCookies("JSESSIONID") // Delete session cookies on logout
-                .permitAll() // Allow everyone to access logout functionality
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
             )
-            .csrf(withDefaults()) // Enable CSRF protection (default behavior)
-            // .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/auth/register")) // Example: to disable CSRF for specific endpoints if necessary for APIs (use with caution)
+            .csrf(withDefaults())
             .sessionManagement(session -> session
-                .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED) // Create session if needed (default)
-                .maximumSessions(1) // Allow only one session per user
-                .maxSessionsPreventsLogin(true) // Prevent new login if max sessions reached
+                .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(true)
             );
 
         return http.build();
     }
-
-
 }

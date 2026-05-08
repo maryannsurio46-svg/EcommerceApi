@@ -1,48 +1,48 @@
 package com.ws101.surio.EcommerceApi.controller;
 
-import com.ws101.surio.EcommerceApi.model.Product;
-import com.ws101.surio.EcommerceApi.service.ProductService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // Import for @PreAuthorize
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
-@CrossOrigin(
-    origins = "http://localhost:5500",
-    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE},
-    allowedHeaders = {"Authorization", "Content-Type"}
-)
 public class ProductController {
 
-    private final ProductService productService;
+    // Example Product Service (you'll implement real service later)
+    // @Autowired
+    // private ProductService productService;
 
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
-
+    // Publicly accessible (as per SecurityConfig)
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public ResponseEntity<List<String>> getAllProducts() {
+        // In a real app, this would fetch from a service
+        List<String> products = new ArrayList<>();
+        products.add("Laptop");
+        products.add("Mouse");
+        products.add("Keyboard");
+        return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/{id}")
-    public Product getProductById(@PathVariable Long id) {
-        return productService.getProductById(id);
-    }
-
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        return productService.createProduct(product);
-    }
-
-    @PutMapping("/{id}")
-    public Product updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        return productService.updateProduct(id, product);
-    }
-
+    // This endpoint will require ADMIN role.
+    // SecurityConfig already permits all for /api/v1/products GET, but the DELETE
+    // on this path needs specific role.
     @DeleteMapping("/{id}")
-    public void deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    @PreAuthorize("hasRole('ADMIN')") // Only users with ROLE_ADMIN can delete products
+    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
+        // Call service to delete product
+        System.out.println("Deleting product with ID: " + id);
+        return ResponseEntity.ok("Product " + id + " deleted by ADMIN.");
+    }
+
+    // This endpoint could also be admin-only or restricted based on business logic
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')") // Example: ADMIN or SELLER can add
+    public ResponseEntity<String> addProduct(@RequestBody String productName) {
+        System.out.println("Adding product: " + productName);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Product " + productName + " added.");
     }
 }

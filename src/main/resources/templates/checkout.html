@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ✅ REQUIRED: CSRF Token for all requests -->
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>Checkout</title>
+    <script src="/js/apiFetch.js"></script> <!-- Import our fetch wrapper -->
+</head>
+<body>
+
+    <h1>Checkout Page</h1>
+    <p>Complete your order here...</p>
+
+    <script>
+        // ✅ 3. Protected Route Check — Run BEFORE rendering content
+        async function checkLogin() {
+            try {
+                // Try to fetch user info (you can create /api/auth/me endpoint in backend)
+                await apiFetch("/api/auth/me"); 
+                // ✅ If no error: user is logged in → page renders normally
+                console.log("✅ User is logged in — can view checkout");
+            } catch (err) {
+                // ❌ 401 will automatically redirect to login from apiFetch
+                console.log("❌ User not logged in");
+            }
+        }
+
+        // Run check immediately when page loads
+        checkLogin();
+    </script>
+
+</body>
+</html>

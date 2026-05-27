@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Protected Page</title>
+</head>
+<body>
+
+<h1>Protected Page</h1>
+
+<script>
+
+fetch("http://localhost:8080/api/v1/orders", {
+    method: "GET",
+    credentials: "include"
+})
+.then(response => {
+
+    // NOT LOGGED IN
+    if (response.status === 401 || response.status === 403) {
+
+        alert("You are not logged in!");
+        window.location.href = "/login";
+
+    } else {
+
+        document.body.innerHTML += "<p>Access granted.</p>";
+
+    }
+
+})
+.catch(error => console.error(error));
+
+</script>
+
+</body>
+</html>

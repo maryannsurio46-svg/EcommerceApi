@@ -1,0 +1,8 @@
+{
+    "name": "Wireless Earbuds",
+    "description": "Noise cancelling earbuds",
+    "price": 79.99,
+    "category": "Electronics",
+    "stockQuantity": 45,
+    "imageUrl": "earbuds.jpg"
+}

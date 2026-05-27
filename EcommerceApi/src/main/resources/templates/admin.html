@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>Admin Panel</title>
+    <script src="/js/apiFetch.js"></script>
+</head>
+<body>
+
+    <h1>Admin Dashboard</h1>
+    <p>Only administrators can see this page.</p>
+
+    <script>
+        // ✅ 3. Protected Route Check
+        async function checkAccess() {
+            try {
+                // Fetch user info — if 401 → redirect, if 403 → access denied
+                await apiFetch("/api/auth/me");
+                console.log("✅ User has access — render admin content");
+            } catch (err) {
+                // Already handled inside apiFetch
+            }
+        }
+
+        checkAccess();
+    </script>
+
+</body>
+</html>

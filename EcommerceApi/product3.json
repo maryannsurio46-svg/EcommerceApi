@@ -1,0 +1,8 @@
+{
+    "name": "Yoga Mat",
+    "description": "Non-slip exercise mat",
+    "price": 29.99,
+    "category": "Sports",
+    "stockQuantity": 30,
+    "imageUrl": "yogamat.jpg"
+}

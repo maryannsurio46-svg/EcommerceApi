@@ -1,3 +1,4 @@
+LAB 9 Security and the API with Sessions & Input Validation
 🛒 Ecommerce API – Spring Boot Security Lab
 
 This project is a Spring Boot REST API for an e-commerce system implementing:
